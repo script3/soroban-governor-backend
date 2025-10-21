@@ -2,7 +2,10 @@ module soroban-governor-backend
 
 go 1.25.3
 
-require github.com/stellar/go v0.0.0-20251016201642-d3f17213d0ac
+require (
+	github.com/google/go-cmp v0.7.0
+	github.com/stellar/go v0.0.0-20251016201642-d3f17213d0ac
+)
 
 require (
 	cloud.google.com/go v0.114.0 // indirect

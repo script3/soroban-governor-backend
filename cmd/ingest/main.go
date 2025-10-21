@@ -97,7 +97,7 @@ func main() {
 			}
 
 			for event_index, event := range events {
-				gov_event, err := governor.NewGovernorEventFromContractEvent(&event, tx.Hash.HexString(), ledger.LedgerSequence(), int32(tx.Index), 0, int32(event_index))
+				gov_event, err := governor.NewGovernorEventFromContractEvent(&event, tx.Hash.HexString(), ledger.LedgerCloseTime(), ledger.LedgerSequence(), int32(tx.Index), 0, int32(event_index))
 				byteStr, binErr := event.MarshalBinary()
 				if binErr != nil {
 					fmt.Printf("Unable to marshal event for logging: %v, %v\n", binErr, event)

@@ -31,7 +31,26 @@ func EncodeEventId(ledgerSeq uint32, txIndex int32, opIndex int32, eventIndex in
 	return opToidString + "-" + eventIndexString
 }
 
-func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, ledgerSeq uint32, txIndex int32, opIndex int32, eventIndex int32) (*GovernorEvent, error) {
+type GovernorEvent struct {
+	// Unique identifier for the event
+	EventId string
+	// StrKey address of the contract emitting the event
+	ContractId string
+	// Associated proposal ID, if applicable
+	ProposalId uint32
+	// The event type
+	EventType string
+	// Additional data payload, JSON encoded
+	EventData string
+	// Transaction hash that triggered the event
+	TxHash string
+	// Ledger sequence when the event was emitted
+	LedgerSeq uint32
+	// Ledger close time (in seconds since epoch) for the ledger the event was emitted
+	LedgerCloseTime int64
+}
+
+func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, ledgerCloseTime int64, ledgerSeq uint32, txIndex int32, opIndex int32, eventIndex int32) (*GovernorEvent, error) {
 	fmt.Printf("Parsing potential governor event\n")
 	if ce.Type != xdr.ContractEventTypeContract ||
 		ce.ContractId == nil ||
@@ -130,32 +149,16 @@ func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, led
 	fmt.Printf("Proposal data parsed %s\n", eventData)
 
 	ge := GovernorEvent{
-		EventId:    eventId,
-		ContractId: contractId,
-		ProposalId: proposalId,
-		EventType:  eventType,
-		EventData:  eventData,
-		LedgerSeq:  ledgerSeq,
-		TxHash:     txHash,
+		EventId:         eventId,
+		ContractId:      contractId,
+		ProposalId:      proposalId,
+		EventType:       eventType,
+		EventData:       eventData,
+		TxHash:          txHash,
+		LedgerSeq:       ledgerSeq,
+		LedgerCloseTime: ledgerCloseTime,
 	}
 	return &ge, nil
-}
-
-type GovernorEvent struct {
-	// Unique identifier for the event
-	EventId string
-	// StrKey address of the contract emitting the event
-	ContractId string
-	// Associated proposal ID, if applicable
-	ProposalId uint32
-	// The event type
-	EventType string
-	// Additional data payload, JSON encoded
-	EventData string
-	// Ledger sequence when the event was emitted
-	LedgerSeq uint32
-	// Transaction hash that triggered the event
-	TxHash string
 }
 
 // Event data emitted when a proposal is created
@@ -189,7 +192,6 @@ func NewProposalCreatedDataFromEventBody(body xdr.ContractEventV0) (*ProposalCre
 	if !ok {
 		return nil, fmt.Errorf("event data is not a vec %w", ErrInvalidEventFormat)
 	}
-
 	if len(*vecData) != 5 {
 		return nil, fmt.Errorf("unexpected number of fields in event data: %w", ErrInvalidEventFormat)
 	}
@@ -231,9 +233,6 @@ func NewProposalCreatedDataFromEventBody(body xdr.ContractEventV0) (*ProposalCre
 		default:
 			return nil, fmt.Errorf("too many entries %d %w", i, ErrEventParsingFailed)
 		}
-	}
-	if data.Title == "" || data.Desc == "" || data.Action == "" || data.VoteStart == 0 || data.VoteEnd == 0 {
-		return nil, fmt.Errorf("missing required fields in event data %w", ErrEventParsingFailed)
 	}
 	return &data, nil
 }
@@ -296,43 +295,33 @@ func NewVoteCastDataFromEventBody(body xdr.ContractEventV0) (*VoteCastData, erro
 	}
 	voter := voterXdr.AccountId.Address()
 
-	mapData, ok := body.Data.GetMap()
+	vecData, ok := body.Data.GetVec()
 	if !ok {
-		return nil, fmt.Errorf("event data is not a map %w", ErrInvalidEventFormat)
+		return nil, fmt.Errorf("event data is not a vec %w", ErrInvalidEventFormat)
 	}
-
-	if len(*mapData) != 2 {
+	if len(*vecData) != 2 {
 		return nil, fmt.Errorf("unexpected number of fields in event data: %w", ErrInvalidEventFormat)
 	}
 
-	foundSupport := false
 	var data VoteCastData
 	data.Voter = voter
-	for _, entry := range *mapData {
-		key, ok := entry.Key.GetSym()
-		if !ok {
-			return nil, fmt.Errorf("key is not a symbol")
-		}
-		switch string(key) {
-		case "support":
-			val, ok := entry.Val.GetU32()
+	for i, entry := range *vecData {
+		switch i {
+		case 0:
+			val, ok := entry.GetU32()
 			if !ok {
 				return nil, fmt.Errorf("support is not a u32 %w", ErrEventParsingFailed)
 			}
 			data.Support = uint32(val)
-			foundSupport = true
-		case "amount":
-			val, ok := entry.Val.GetI128()
+		case 1:
+			val, ok := entry.GetI128()
 			if !ok {
 				return nil, fmt.Errorf("amount is not an i128 %w", ErrEventParsingFailed)
 			}
 			data.Amount = amount.String128Raw(val)
 		default:
-			return nil, fmt.Errorf("unexpected key %s %w", string(key), ErrEventParsingFailed)
+			return nil, fmt.Errorf("too many entries %d %w", i, ErrEventParsingFailed)
 		}
-	}
-	if !foundSupport || data.Amount == "" {
-		return nil, fmt.Errorf("missing required fields in event data %w", ErrEventParsingFailed)
 	}
 	return &data, nil
 }
