@@ -10,25 +10,19 @@ import (
 func TestEncodeEventId(t *testing.T) {
 	tests := []struct {
 		name       string
-		ledgerSeq  uint32
-		txIndex    int32
-		opIndex    int32
+		opToid     int64
 		eventIndex int32
 		want       string
 	}{
 		{
 			name:       "all zeros",
-			ledgerSeq:  0,
-			txIndex:    0,
-			opIndex:    0,
+			opToid:     0,
 			eventIndex: 0,
 			want:       "0000000000000000000-0000000000",
 		},
 		{
 			name:       "correctly creates event id",
-			ledgerSeq:  1106520,
-			txIndex:    2,
-			opIndex:    0,
+			opToid:     4752467212378112,
 			eventIndex: 999999,
 			want:       "0004752467212378112-0000999999",
 		},
@@ -36,7 +30,7 @@ func TestEncodeEventId(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := EncodeEventId(tt.ledgerSeq, tt.txIndex, tt.opIndex, tt.eventIndex)
+			got := EncodeEventId(tt.opToid, tt.eventIndex)
 			if got != tt.want {
 				t.Errorf("\nResult = %v\nWant = %v\n", got, tt.want)
 			}
@@ -51,8 +45,7 @@ func TestNewGovernorEventFromContractEvent(t *testing.T) {
 		txHash          string
 		ledgerCloseTime int64
 		ledgerSeq       uint32
-		txIndex         int32
-		opIndex         int32
+		opToid          int64
 		eventIndex      int32
 		want            *GovernorEvent
 	}{
@@ -62,8 +55,7 @@ func TestNewGovernorEventFromContractEvent(t *testing.T) {
 			txHash:          "cb759f7b061992ac79e5f944a08238a24d2999a5ac58eee9fde35dff6404d970",
 			ledgerCloseTime: 1761053041,
 			ledgerSeq:       1170134,
-			txIndex:         1,
-			opIndex:         0,
+			opToid:          5025687261941760,
 			eventIndex:      0,
 			want: &GovernorEvent{
 				EventId:         "0005025687261941760-0000000000",
@@ -82,8 +74,7 @@ func TestNewGovernorEventFromContractEvent(t *testing.T) {
 			txHash:          "cb759f7b061992ac79e5f944a08238a24d2999a5ac58eee9fde35dff6404d970",
 			ledgerCloseTime: 1761053046,
 			ledgerSeq:       1170136,
-			txIndex:         0,
-			opIndex:         0,
+			opToid:          5025695851872256,
 			eventIndex:      0,
 			want: &GovernorEvent{
 				EventId:         "0005025695851872256-0000000000",
@@ -102,8 +93,7 @@ func TestNewGovernorEventFromContractEvent(t *testing.T) {
 			txHash:          "caa081584805c84f4e74b904b201fe765c16f7e3ed784d87e8dd531c621c62db",
 			ledgerCloseTime: 1761053046,
 			ledgerSeq:       1170136,
-			txIndex:         1,
-			opIndex:         99,
+			opToid:          5025695851876451,
 			eventIndex:      42,
 			want: &GovernorEvent{
 				EventId:         "0005025695851876451-0000000042",
@@ -122,8 +112,7 @@ func TestNewGovernorEventFromContractEvent(t *testing.T) {
 			txHash:          "e65cfb5071126dc0a21b9d77f6d26a9d5788edf1cb6aac8de6e478273c1957f5",
 			ledgerCloseTime: 1761053050,
 			ledgerSeq:       1170137,
-			txIndex:         0,
-			opIndex:         50,
+			opToid:          5025700146839602,
 			eventIndex:      3,
 			want: &GovernorEvent{
 				EventId:         "0005025700146839602-0000000003",
@@ -145,7 +134,7 @@ func TestNewGovernorEventFromContractEvent(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Setup Failed: Unable to unmarshal contract event xdr: %v", err)
 			}
-			got, err := NewGovernorEventFromContractEvent(&ce, tt.txHash, tt.ledgerCloseTime, tt.ledgerSeq, tt.txIndex, tt.opIndex, tt.eventIndex)
+			got, err := NewGovernorEventFromContractEvent(&ce, tt.txHash, tt.ledgerSeq, tt.ledgerCloseTime, tt.opToid, tt.eventIndex)
 			if err != nil {
 				t.Fatalf("returned error: %v", err)
 			}

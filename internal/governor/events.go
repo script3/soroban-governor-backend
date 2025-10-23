@@ -1,14 +1,12 @@
 package governor
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/stellar/go/amount"
 	"github.com/stellar/go/strkey"
-	"github.com/stellar/go/toid"
 	"github.com/stellar/go/xdr"
 )
 
@@ -18,14 +16,10 @@ var (
 )
 
 // Construct a unique eventId for an event, using the eventId pattern from the Stellar RPC.
-// It combines a 19-character TOID and a 10-character, zero-padded event index, separated by a hyphen
 //
 // Ref: https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getEvents
-func EncodeEventId(ledgerSeq uint32, txIndex int32, opIndex int32, eventIndex int32) string {
-	// toid package has a TODO to accept uint32. Casting here is OK as we will never reach a ledger > int32::MAX.
-	opToid := toid.New(int32(ledgerSeq), txIndex, opIndex).ToInt64()
-
-	opToidString := fmt.Sprintf("%019d", opToid)
+func EncodeEventId(toid int64, eventIndex int32) string {
+	opToidString := fmt.Sprintf("%019d", toid)
 	eventIndexString := fmt.Sprintf("%010d", eventIndex)
 
 	return opToidString + "-" + eventIndexString
@@ -50,8 +44,7 @@ type GovernorEvent struct {
 	LedgerCloseTime int64
 }
 
-func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, ledgerCloseTime int64, ledgerSeq uint32, txIndex int32, opIndex int32, eventIndex int32) (*GovernorEvent, error) {
-	fmt.Printf("Parsing potential governor event\n")
+func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, ledgerSeq uint32, ledgerCloseTime int64, toid int64, eventIndex int32) (*GovernorEvent, error) {
 	if ce.Type != xdr.ContractEventTypeContract ||
 		ce.ContractId == nil ||
 		ce.Body.V != 0 {
@@ -68,11 +61,7 @@ func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, led
 		return nil, fmt.Errorf("unable to read body: %w", ErrEventParsingFailed)
 	}
 
-	fmt.Printf("Event body parsed\n")
-
-	eventId := EncodeEventId(ledgerSeq, txIndex, opIndex, eventIndex)
-
-	fmt.Printf("Event Id parsed %s\n", eventId)
+	eventId := EncodeEventId(toid, eventIndex)
 
 	if len(eventBody.Topics) < 2 {
 		return nil, fmt.Errorf("not governor event: %w", ErrInvalidEventFormat)
@@ -85,15 +74,11 @@ func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, led
 	}
 	eventType := string(eventTypeXdr)
 
-	fmt.Printf("Event type parsed %s\n", eventType)
-
 	proposalIdXdr, ok := eventBody.Topics[1].GetU32()
 	if !ok {
 		return nil, fmt.Errorf("invalid event topic: %w", ErrInvalidEventFormat)
 	}
 	proposalId := uint32(proposalIdXdr)
-
-	fmt.Printf("Proposal id parsed %d\n", proposalId)
 
 	var eventData string
 	switch eventType {
@@ -145,8 +130,6 @@ func NewGovernorEventFromContractEvent(ce *xdr.ContractEvent, txHash string, led
 	default:
 		return nil, fmt.Errorf("invalid event type %s: %w", eventType, ErrInvalidEventFormat)
 	}
-
-	fmt.Printf("Proposal data parsed %s\n", eventData)
 
 	ge := GovernorEvent{
 		EventId:         eventId,
@@ -213,11 +196,11 @@ func NewProposalCreatedDataFromEventBody(body xdr.ContractEventV0) (*ProposalCre
 			}
 			data.Desc = string(val)
 		case 2:
-			byteStr, err := entry.MarshalBinary()
-			if err != nil {
+			valXdr, xdrErr := xdr.MarshalBase64(entry)
+			if xdrErr != nil {
 				return nil, fmt.Errorf("failed to marshal action data %w", ErrEventParsingFailed)
 			}
-			data.Action = base64.StdEncoding.EncodeToString(byteStr)
+			data.Action = valXdr
 		case 3:
 			val, ok := entry.GetU32()
 			if !ok {
