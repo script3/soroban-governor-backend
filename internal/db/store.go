@@ -143,6 +143,9 @@ func (store *Store) GetLedgerSeq(ctx context.Context, source string) (uint32, er
 	var ledgerSeq uint32
 	err := store.db.QueryRowContext(ctx, query, source).Scan(&ledgerSeq)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
 		return 0, err
 	}
 

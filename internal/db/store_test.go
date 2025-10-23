@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 	"testing"
 
@@ -35,7 +34,7 @@ func setupStore(t *testing.T) *Store {
 
 func TestHistoryTable(t *testing.T) {
 	store := setupStore(t)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	events := []*governor.GovernorEvent{
 		{
@@ -139,18 +138,27 @@ func TestHistoryTable(t *testing.T) {
 
 func TestStatusTable(t *testing.T) {
 	store := setupStore(t)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	source := "indexer"
 
+	// no value exists yet
+	retrieved, err := store.GetLedgerSeq(ctx, source)
+	if err != nil {
+		t.Fatalf("failed to get ledger seq: %v", err)
+	}
+	if retrieved != 0 {
+		t.Errorf("expected initial ledger_seq 0, got %d", retrieved)
+	}
+
 	// Set initial value
-	err := store.UpsertLedgerSeq(ctx, source, 1000)
+	err = store.UpsertLedgerSeq(ctx, source, 1000)
 	if err != nil {
 		t.Fatalf("failed to set initial ledger seq: %v", err)
 	}
 
 	// Verify value
-	retrieved, err := store.GetLedgerSeq(ctx, source)
+	retrieved, err = store.GetLedgerSeq(ctx, source)
 	if err != nil {
 		t.Fatalf("failed to get ledger seq: %v", err)
 	}
@@ -178,7 +186,7 @@ func TestStatusTable(t *testing.T) {
 
 func TestProposalsTable(t *testing.T) {
 	store := setupStore(t)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	proposals := []*governor.Proposal{
 		{
@@ -315,7 +323,7 @@ func TestProposalsTable(t *testing.T) {
 
 func TestVotesTable(t *testing.T) {
 	store := setupStore(t)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	contractId := "contract_123"
 	proposalId := uint32(1)

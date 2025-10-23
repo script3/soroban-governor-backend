@@ -10,7 +10,7 @@ type Proposal struct {
 	ContractId      string
 	ProposalId      uint32
 	Proposer        string
-	Status          int
+	Status          uint32
 	Title           string
 	Description     string
 	Action          string
