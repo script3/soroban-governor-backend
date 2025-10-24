@@ -53,5 +53,6 @@ CREATE INDEX IF NOT EXISTS idx_votes_contract_proposal ON votes(contract_id, pro
 -- Create status table to track processed ledgers
 CREATE TABLE IF NOT EXISTS status (
     source TEXT PRIMARY KEY,
-    ledger_seq INTEGER NOT NULL
+    ledger_seq INTEGER NOT NULL,
+    ledger_close_time BIGINT NOT NULL
 );

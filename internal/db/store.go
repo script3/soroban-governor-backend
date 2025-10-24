@@ -125,31 +125,32 @@ func (store *Store) GetEventsByContractId(
 
 //********** Status Table Methods **********//
 
-// UpsertLedgerSeq updates the last stored ledger sequence in the status table
-func (store *Store) UpsertLedgerSeq(ctx context.Context, source string, ledgerSeq uint32) error {
+// UpsertStatus updates the last processed ledger data in the status table
+func (store *Store) UpsertStatus(ctx context.Context, source string, ledgerSeq uint32, ledgerCloseTime int64) error {
 	query := `
-		INSERT INTO status (source, ledger_seq)
-		VALUES ($1, $2)
-		ON CONFLICT (source) DO UPDATE SET ledger_seq = EXCLUDED.ledger_seq
+		INSERT INTO status (source, ledger_seq, ledger_close_time)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (source) DO UPDATE SET ledger_seq = EXCLUDED.ledger_seq, ledger_close_time = EXCLUDED.ledger_close_time
 	`
-	_, err := store.db.ExecContext(ctx, query, source, ledgerSeq)
+	_, err := store.db.ExecContext(ctx, query, source, ledgerSeq, ledgerCloseTime)
 	return err
 }
 
-// GetLedgerSeq returns the last stored ledger sequence in the status table
-func (store *Store) GetLedgerSeq(ctx context.Context, source string) (uint32, error) {
-	query := `SELECT ledger_seq FROM status WHERE source = $1`
+// GetStatus returns the last processed ledger data for the given source
+func (store *Store) GetStatus(ctx context.Context, source string) (uint32, int64, error) {
+	query := `SELECT ledger_seq, ledger_close_time FROM status WHERE source = $1`
 
 	var ledgerSeq uint32
-	err := store.db.QueryRowContext(ctx, query, source).Scan(&ledgerSeq)
+	var ledgerCloseTime int64
+	err := store.db.QueryRowContext(ctx, query, source).Scan(&ledgerSeq, &ledgerCloseTime)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, nil
+			return 0, 0, nil
 		}
-		return 0, err
+		return 0, 0, err
 	}
 
-	return ledgerSeq, nil
+	return ledgerSeq, ledgerCloseTime, nil
 }
 
 //********** Proposals Table **********//

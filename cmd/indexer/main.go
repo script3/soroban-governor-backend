@@ -46,7 +46,7 @@ func main() {
 	endpoint := "https://soroban-testnet.stellar.org"
 
 	// Get the latest ledger sequence from the RPC server
-	lastLedger, err := store.GetLedgerSeq(ctx, source)
+	lastLedger, _, err := store.GetStatus(ctx, source)
 	if err != nil {
 		slog.Error("Failed to fetch last processed ledger", "err", err)
 		os.Exit(1)
@@ -89,7 +89,7 @@ func main() {
 
 		idx.ApplyLedger(ctx, txReader, ledger.LedgerSequence(), ledger.LedgerCloseTime())
 
-		err = store.UpsertLedgerSeq(ctx, source, ledger.LedgerSequence())
+		err = store.UpsertStatus(ctx, source, ledger.LedgerSequence(), ledger.LedgerCloseTime())
 		if err != nil {
 			slog.Error("Failed to update last processed ledger", "ledger", seq, "err", err)
 		}

@@ -143,44 +143,51 @@ func TestStatusTable(t *testing.T) {
 	source := "indexer"
 
 	// no value exists yet
-	retrieved, err := store.GetLedgerSeq(ctx, source)
+	seq, timestamp, err := store.GetStatus(ctx, source)
 	if err != nil {
 		t.Fatalf("failed to get ledger seq: %v", err)
 	}
-	if retrieved != 0 {
-		t.Errorf("expected initial ledger_seq 0, got %d", retrieved)
+	if seq != 0 {
+		t.Errorf("expected initial ledger_seq 0, got %d", seq)
+	}
+	if timestamp != 0 {
+		t.Errorf("expected initial ledger_close_time 0, got %d", timestamp)
 	}
 
 	// Set initial value
-	err = store.UpsertLedgerSeq(ctx, source, 1000)
+	err = store.UpsertStatus(ctx, source, 1000, 1234567)
 	if err != nil {
 		t.Fatalf("failed to set initial ledger seq: %v", err)
 	}
 
 	// Verify value
-	retrieved, err = store.GetLedgerSeq(ctx, source)
+	seq, timestamp, err = store.GetStatus(ctx, source)
 	if err != nil {
 		t.Fatalf("failed to get ledger seq: %v", err)
 	}
-
-	if retrieved != 1000 {
-		t.Errorf("expected ledger_seq 2000, got %d", retrieved)
+	if seq != 1000 {
+		t.Errorf("expected initial ledger_seq 1000, got %d", seq)
+	}
+	if timestamp != 1234567 {
+		t.Errorf("expected initial ledger_close_time 1234567, got %d", timestamp)
 	}
 
 	// Update value
-	err = store.UpsertLedgerSeq(ctx, source, 2000)
+	err = store.UpsertStatus(ctx, source, 2000, 2345678)
 	if err != nil {
 		t.Fatalf("failed to update ledger seq: %v", err)
 	}
 
 	// Verify updated value
-	retrieved, err = store.GetLedgerSeq(ctx, source)
+	seq, timestamp, err = store.GetStatus(ctx, source)
 	if err != nil {
 		t.Fatalf("failed to get ledger seq: %v", err)
 	}
-
-	if retrieved != 2000 {
-		t.Errorf("expected ledger_seq 2000, got %d", retrieved)
+	if seq != 2000 {
+		t.Errorf("expected initial ledger_seq 2000, got %d", seq)
+	}
+	if timestamp != 2345678 {
+		t.Errorf("expected initial ledger_close_time 2345678, got %d", timestamp)
 	}
 }
 
