@@ -1,3 +1,6 @@
 mcp.json
 **/.DS_Store
+
+# local testing
 gov.db
+/config/*

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -23,12 +24,23 @@ func main() {
 
 	slog.Info("Starting API service...")
 
+	slog.Info("Loading config...")
+	config, err := api.LoadConfig()
+	if err != nil {
+		slog.Error("Failed to load config", "err", err)
+		os.Exit(1)
+	}
+	slog.Info("Config loaded.", "db_type", config.DBType, "port", config.APIPort)
+
 	slog.Info("Connection to database...")
-	// Create the database connection
-	database, err := sql.Open("sqlite", "file:./gov.db")
+	// Create the database
+	database, err := sql.Open(config.DBType, config.DBConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	database.SetMaxOpenConns(config.DBMaxOpenConns)
+	database.SetMaxIdleConns(config.DBMaxIdleConns)
+	database.SetConnMaxLifetime(time.Duration(config.DBConnMaxLifetime) * time.Second)
 	defer database.Close()
 
 	// Create the store
@@ -40,7 +52,7 @@ func main() {
 
 	// Setup HTTP server
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         fmt.Sprintf(":%s", config.APIPort),
 		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -51,7 +63,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		slog.Info("API server listening on :8080")
+		slog.Info("API server listening", "port", config.APIPort)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed to start: %v", err)
 		}

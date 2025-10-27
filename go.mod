@@ -5,6 +5,7 @@ go 1.25.3
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/joho/godotenv v1.5.1
 	github.com/stellar/go v0.0.0-20251016201642-d3f17213d0ac
 	modernc.org/sqlite v1.39.1
 )
@@ -82,7 +83,7 @@ require (
 	github.com/segmentio/go-loggly v0.5.1-0.20171222203950-eb91657e62b2 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stellar/go-xdr v0.0.0-20231122183749-b53fb00bcac2 // indirect
-	github.com/stellar/stellar-rpc v0.9.6-0.20250130160539-be7702aa01ba
+	github.com/stellar/stellar-rpc v0.9.6-0.20250130160539-be7702aa01ba // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	go.opencensus.io v0.24.0 // indirect

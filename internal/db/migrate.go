@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"log/slog"
 	"sort"
 )
 
@@ -11,7 +12,7 @@ import (
 var migrationsFS embed.FS
 
 func RunMigrations(db *sql.DB) error {
-	fmt.Printf("Applying database migrations...\n")
+	slog.Info("Applying database migrations...\n")
 
 	// Create migrations tracking table
 	_, err := db.Exec(`
@@ -71,9 +72,9 @@ func RunMigrations(db *sql.DB) error {
 			return fmt.Errorf("record migration %s: %w", filename, err)
 		}
 
-		fmt.Printf("Applied migration: %s\n", filename)
+		slog.Info("Applied migration", "filename", filename)
 	}
 
-	fmt.Printf("Database migrations complete.\n")
+	slog.Info("Database migrations complete.")
 	return nil
 }
