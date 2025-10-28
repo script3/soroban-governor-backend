@@ -1,0 +1,27 @@
+# -- BUILDER STAGE
+FROM golang:1.25 AS builder
+
+WORKDIR /usr/src/app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY cmd/api ./cmd/
+COPY internal/ ./internal/
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/api ./cmd
+
+# -- CONTAINER
+FROM ubuntu:24.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# install deps
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /bin/api /app/indexer
+ENTRYPOINT ["/app/api"]
