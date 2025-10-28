@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 
 	"github.com/script3/soroban-governor-backend/internal/api"

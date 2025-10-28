@@ -27,6 +27,11 @@ func NewHandler(store *db.Store) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	timeStart := time.Now()
+	defer func() {
+		duration := time.Since(timeStart)
+		slog.Info("Request complete", "method", r.Method, "path", r.URL.String(), "ms", duration.Milliseconds())
+	}()
 	// CORS headers
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")

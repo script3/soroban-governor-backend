@@ -5,7 +5,9 @@ go 1.25.3
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stellar/go v0.0.0-20251016201642-d3f17213d0ac
 	modernc.org/sqlite v1.39.1
 )
@@ -70,6 +72,9 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.4 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
@@ -81,7 +86,6 @@ require (
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/segmentio/go-loggly v0.5.1-0.20171222203950-eb91657e62b2 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stellar/go-xdr v0.0.0-20231122183749-b53fb00bcac2 // indirect
 	github.com/stellar/stellar-rpc v0.9.6-0.20250130160539-be7702aa01ba // indirect
 	github.com/stretchr/objx v0.5.2 // indirect

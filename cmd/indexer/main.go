@@ -16,7 +16,7 @@ import (
 	"github.com/stellar/go/network"
 	"github.com/stellar/go/support/log"
 
-	_ "github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 )
 
@@ -92,7 +92,7 @@ func main() {
 		}
 		// Only log errors from the backend to keep output cleaner.
 		lg := log.New()
-		lg.SetLevel(logrus.ErrorLevel)
+		lg.SetLevel(logrus.WarnLevel)
 		captiveCoreConfig.Log = lg
 		backend, err = ledgerbackend.NewCaptive(captiveCoreConfig)
 		if err != nil {
@@ -128,6 +128,7 @@ func main() {
 			slog.Error("No more ledgers or error at sequence.", "ledger", seq, "err", err)
 			break
 		}
+		startTime := time.Now()
 
 		txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(network.TestNetworkPassphrase, ledger)
 		if err != nil {
@@ -142,7 +143,8 @@ func main() {
 			slog.Error("Failed to update last processed ledger", "ledger", seq, "err", err)
 		}
 
-		slog.Info("Ledger processed.", "ledger", ledger.LedgerSequence())
+		elapsed := time.Since(startTime)
+		slog.Info("Ledger processed.", "ledger", ledger.LedgerSequence(), "ms", elapsed.Milliseconds())
 		seq++
 	}
 

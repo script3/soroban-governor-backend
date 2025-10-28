@@ -4,8 +4,8 @@ test:
 run-indexer:
 	go run cmd/indexer/main.go
 
-run-server:
-	go run cmd/server/main.go
+run-api:
+	go run cmd/api/main.go
 
 build-docker:
 	docker build -t governor-indexer -f ./docker/Dockerfile.indexer --platform linux/amd64 .
