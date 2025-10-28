@@ -3,4 +3,5 @@ mcp.json
 
 # local testing
 gov.db
-/config/*
+**/config
+**/captive-core

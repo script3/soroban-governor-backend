@@ -1,0 +1,40 @@
+
+name: example
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: gov
+      POSTGRES_PASSWORD: govpassword
+      POSTGRES_DB: govdb
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql
+    shm_size: '256mb'
+    ports:
+      - "5432:5432"
+  indexer:
+    image: governor-indexer:latest # use the pinned docker hub image in production
+    pull_policy: never # don't use this in production, forces local image usage
+    depends_on:
+      - db
+    volumes:
+      - ./indexer:/config
+    restart: unless-stopped
+  api:
+    image: governor-api:latest # use the pinned docker hub image in production
+    pull_policy: never # don't use this in production, forces local image usage
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./api.cfg
+    restart: unless-stopped
+  
+networks:
+  example: {}
+  
+volumes:
+  pgdata: {}
