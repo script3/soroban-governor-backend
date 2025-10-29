@@ -25,16 +25,18 @@ func NewIndexer(store *db.Store) *Indexer {
 }
 
 // ApplyLedger processes all transactions in a ledger and applies relevant governor events to the db
-func (idx *Indexer) ApplyLedger(ctx context.Context, txReader *ingest.LedgerTransactionReader, ledgerSeq uint32, ledgerCloseTime int64) error {
+func (idx *Indexer) ApplyLedger(ctx context.Context, txReader *ingest.LedgerTransactionReader, ledgerSeq uint32, ledgerCloseTime int64) (int, error) {
+	txCount := 0
 	for {
 		tx, err := txReader.Read()
 		if err != nil {
 			if err == io.EOF {
 				break
 			} else {
-				return fmt.Errorf("failed to read ledger transaction: %w", err)
+				return txCount, fmt.Errorf("failed to read ledger transaction: %w", err)
 			}
 		}
+		txCount++
 
 		if !tx.Successful() {
 			continue
@@ -79,7 +81,7 @@ func (idx *Indexer) ApplyLedger(ctx context.Context, txReader *ingest.LedgerTran
 			}
 		}
 	}
-	return nil
+	return txCount, nil
 }
 
 // ApplyEvent processes a GovernorEvent and applies changes to aggregated tables

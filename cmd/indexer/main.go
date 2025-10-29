@@ -62,17 +62,21 @@ func main() {
 		os.Exit(1)
 	}
 	startSeq := max(lastLedger, config.LedgerBackendStartSeq)
+	var networkPassphrase string
+	if config.Network == "public" {
+		networkPassphrase = network.PublicNetworkPassphrase
+	} else {
+		networkPassphrase = network.TestNetworkPassphrase
+	}
 
 	// Configure the RPC Ledger Backend
 	var backend ledgerbackend.LedgerBackend
-	if config.LedgerBackendType == "core" {
-		var networkPassphrase string
+	switch config.LedgerBackendType {
+	case "core":
 		var defaultHistoryUrls []string
 		if config.Network == "public" {
-			networkPassphrase = network.PublicNetworkPassphrase
 			defaultHistoryUrls = network.PublicNetworkhistoryArchiveURLs
 		} else {
-			networkPassphrase = network.TestNetworkPassphrase
 			defaultHistoryUrls = network.TestNetworkhistoryArchiveURLs
 		}
 		defaultParams := ledgerbackend.CaptiveCoreTomlParams{
@@ -100,12 +104,12 @@ func main() {
 			os.Exit(1)
 		}
 		defer backend.Close()
-	} else if config.LedgerBackendType == "rpc" {
+	case "rpc":
 		backend = ledgerbackend.NewRPCLedgerBackend(ledgerbackend.RPCLedgerBackendOptions{
 			RPCServerURL: config.RPCUrl,
 		})
 		defer backend.Close()
-	} else {
+	default:
 		slog.Error("Unsupported LEDGER_BACKEND_TYPE", "type", config.LedgerBackendType)
 		os.Exit(1)
 	}
@@ -130,13 +134,16 @@ func main() {
 		}
 		startTime := time.Now()
 
-		txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(network.TestNetworkPassphrase, ledger)
+		txReader, err := ingest.NewLedgerTransactionReaderFromLedgerCloseMeta(networkPassphrase, ledger)
 		if err != nil {
 			slog.Error("Failed to create transaction reader", "ledger", seq, "err", err)
 			os.Exit(1)
 		}
 
-		idx.ApplyLedger(ctx, txReader, ledger.LedgerSequence(), ledger.LedgerCloseTime())
+		scannedTxs, err := idx.ApplyLedger(ctx, txReader, ledger.LedgerSequence(), ledger.LedgerCloseTime())
+		if err != nil {
+			slog.Error("Failed to apply ledger", "ledger", seq, "err", err)
+		}
 
 		err = store.UpsertStatus(ctx, source, ledger.LedgerSequence(), ledger.LedgerCloseTime())
 		if err != nil {
@@ -144,7 +151,7 @@ func main() {
 		}
 
 		elapsed := time.Since(startTime)
-		slog.Info("Ledger processed.", "ledger", ledger.LedgerSequence(), "ms", elapsed.Milliseconds())
+		slog.Info("Ledger processed.", "ledger", ledger.LedgerSequence(), "txs", scannedTxs, "ms", elapsed.Milliseconds())
 		seq++
 	}
 
