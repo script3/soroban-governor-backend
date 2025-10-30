@@ -42,12 +42,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) registerRoutes() {
+	h.router.HandleFunc("OPTIONS /", h.handleOptions)
+
 	h.router.HandleFunc("GET /health", h.handleHealth)
 	h.router.HandleFunc("GET /{contractId}/proposals/{proposalId}", h.handleGetProposal)
 
 	h.router.HandleFunc("GET /{contractId}/proposals", h.handleGetProposals)
 	h.router.HandleFunc("GET /{contractId}/proposals/{proposalId}/votes", h.handleGetVotes)
 	h.router.HandleFunc("GET /{contractId}/events", h.handleGetEvents)
+}
+
+// handleOptions handles CORS preflight requests
+func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 // handleHealth returns service health status
