@@ -11,9 +11,9 @@ import (
 
 	"github.com/script3/soroban-governor-backend/internal/db"
 	"github.com/script3/soroban-governor-backend/internal/governor"
-	"github.com/stellar/go/ingest"
-	"github.com/stellar/go/toid"
-	"github.com/stellar/go/xdr"
+	"github.com/stellar/go-stellar-sdk/ingest"
+	"github.com/stellar/go-stellar-sdk/toid"
+	"github.com/stellar/go-stellar-sdk/xdr"
 )
 
 type Indexer struct {
