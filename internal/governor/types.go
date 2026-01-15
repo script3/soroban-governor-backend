@@ -3,8 +3,8 @@ package governor
 import (
 	"fmt"
 
-	"github.com/stellar/go/amount"
-	"github.com/stellar/go/xdr"
+	"github.com/stellar/go-stellar-sdk/amount"
+	"github.com/stellar/go-stellar-sdk/xdr"
 )
 
 // The vote counts for a proposal
