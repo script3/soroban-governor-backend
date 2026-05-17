@@ -15,11 +15,11 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/indexer ./cmd/indexer
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG STELLAR_CORE_VERSION=26.1.0-*
+ARG STELLAR_CORE_VERSION=26.1.0-3210.427aa3978.noble
 
 # install deps
 RUN apt-get update && \
-    apt-get install -y ca-certificates curl && \
+    apt-get install -y ca-certificates curl adduser && \
     install -d /etc/apt/keyrings && \
     curl -fsSL https://apt.stellar.org/SDF.asc -o /etc/apt/keyrings/SDF.asc && \
     chmod a+r /etc/apt/keyrings/SDF.asc && \
