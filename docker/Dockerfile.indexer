@@ -15,15 +15,17 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/indexer ./cmd/indexer
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG STELLAR_CORE_VERSION=26.1.0-*
 
 # install deps
 RUN apt-get update && \
-    apt-get install -y ca-certificates wget gnupg2 apt-transport-https && \
-    wget -qO - https://apt.stellar.org/SDF.asc | apt-key add - && \
-    echo "deb https://apt.stellar.org noble stable" >/etc/apt/sources.list.d/SDF.list && \
-    echo "deb https://apt.stellar.org noble unstable" >/etc/apt/sources.list.d/SDF-unstable.list && \
+    apt-get install -y ca-certificates curl && \
+    install -d /etc/apt/keyrings && \
+    curl -fsSL https://apt.stellar.org/SDF.asc -o /etc/apt/keyrings/SDF.asc && \
+    chmod a+r /etc/apt/keyrings/SDF.asc && \
+    echo "deb [signed-by=/etc/apt/keyrings/SDF.asc] https://apt.stellar.org noble stable" > /etc/apt/sources.list.d/SDF.list && \
     apt-get update && \
-    apt-get install -y stellar-core && \
+    apt-get install -y stellar-core=${STELLAR_CORE_VERSION} && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

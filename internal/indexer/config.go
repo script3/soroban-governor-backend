@@ -56,6 +56,11 @@ type Config struct {
 	// CORE_BINARY_PATH (string) default "/usr/bin/stellar-core"
 	// The file path to the stellar-core binary, if using "core" as the ledger backend.
 	CoreBinaryPath string
+
+	// CORE_LOG_LEVEL (string) default "warn"
+	// The log level for captive-core output. Accepts any logrus level: "panic", "fatal", "error",
+	// "warn", "info", "debug", "trace". Defaults to "warn" if unset or invalid.
+	CoreLogLevel string
 }
 
 func LoadConfig() (*Config, error) {
@@ -166,6 +171,13 @@ func LoadConfig() (*Config, error) {
 	if config.CoreBinaryPath == "" {
 		slog.Info("CORE_BINARY_PATH not set, defaulting to /usr/bin/stellar-core")
 		config.CoreBinaryPath = "/usr/bin/stellar-core"
+	}
+
+	// Load CORE_LOG_LEVEL
+	config.CoreLogLevel = os.Getenv("CORE_LOG_LEVEL")
+	if config.CoreLogLevel == "" {
+		slog.Info("CORE_LOG_LEVEL not set, defaulting to warn")
+		config.CoreLogLevel = "warn"
 	}
 
 	return config, nil
