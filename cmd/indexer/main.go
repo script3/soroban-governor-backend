@@ -94,9 +94,13 @@ func main() {
 			HistoryArchiveURLs: defaultHistoryUrls,
 			Toml:               captiveCoreToml,
 		}
-		// Only log errors from the backend to keep output cleaner.
 		lg := log.New()
-		lg.SetLevel(logrus.WarnLevel)
+		level, parseErr := logrus.ParseLevel(config.CoreLogLevel)
+		if parseErr != nil {
+			slog.Warn("Invalid CORE_LOG_LEVEL, defaulting to warn", "value", config.CoreLogLevel, "err", parseErr)
+			level = logrus.WarnLevel
+		}
+		lg.SetLevel(level)
 		captiveCoreConfig.Log = lg
 		backend, err = ledgerbackend.NewCaptive(captiveCoreConfig)
 		if err != nil {
